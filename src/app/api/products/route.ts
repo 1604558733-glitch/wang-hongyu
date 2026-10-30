@@ -2,9 +2,11 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { currentUserId } from "@/lib/auth";
 export async function GET(req: Request) {
-  const communityId = new URL(req.url).searchParams.get("communityId");
+  const url = new URL(req.url);
+  const communityId = url.searchParams.get("communityId");
+  const q = (url.searchParams.get("q") || "").trim().slice(0,80);
   const products = await db.product.findMany({
-    where: { status: "AVAILABLE", ...(communityId ? { communityId } : {}) },
+    where: { status: "AVAILABLE", ...(communityId ? { communityId } : {}), ...(q ? { OR: [{ title: { contains:q, mode:"insensitive" as const } }, { description: { contains:q, mode:"insensitive" as const } }] } : {}) },
     include: { community: { select: { name: true, city: true } }, seller: { select: { name: true } } },
     orderBy: { createdAt: "desc" }, take: 50
   });
