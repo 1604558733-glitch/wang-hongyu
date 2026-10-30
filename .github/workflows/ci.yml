@@ -1,35 +1,32 @@
-name: Community Market CI
+name: Neighbor Market CI
 
 on:
   push:
   pull_request:
 
 jobs:
-  repo-check:
+  validate:
     runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgresql://test:test@localhost:5432/testdb
+      JWT_SECRET: ci-only-not-for-production-long-random-secret-123
     steps:
       - uses: actions/checkout@v4
-      - name: Check project governance
+      - name: Check review standards
         run: |
           test -s AGENTS.md
           test -s docs/QUALITY_GATE.md
           test -s README.md
-      - name: Check Python syntax and run tests when source exists
-        shell: bash
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install dependencies
         run: |
-          if [ -f requirements.txt ] && [ -f backend/main.py ] && [ -f test_product.py ]; then
-            python -m pip install --upgrade pip
-            python -m pip install -r requirements.txt pytest httpx
-            python -m compileall -q backend
-            python -m pytest -q test_product.py
-          else
-            echo "::notice::Application source not uploaded yet. App tests skipped; quality gate not passed."
-          fi
-      - name: Check JavaScript syntax when frontend exists
-        shell: bash
-        run: |
-          if [ -f frontend/app.js ]; then
-            node --check frontend/app.js
-          else
-            echo "::notice::Frontend source not uploaded yet."
-          fi
+          if [ -f package-lock.json ]; then npm ci; else npm install --no-audit --no-fund; fi
+      - name: Generate Prisma client
+        run: npx prisma generate
+      - name: TypeScript validation
+        run: npx tsc --noEmit
+      - name: Production build
+        run: npm run build
