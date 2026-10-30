@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "prisma generate && next build",
     "start": "next start",
-    "db": "prisma migrate dev"
+    "db": "prisma migrate dev",
+    "db:seed": "prisma db seed",
+    "db:studio": "prisma studio"
   },
   "dependencies": {
     "next": "^15.5.0",
@@ -22,6 +24,10 @@
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "@types/bcryptjs": "^2.4.6",
-    "prisma": "^6.0.0"
+    "prisma": "^6.0.0",
+    "tsx": "^4.19.0"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
   }
 }
